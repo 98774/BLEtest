@@ -25,6 +25,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -68,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
                     super.onCharacteristicWrite(gatt, characteristic, status);
+                    debugText.setText(characteristic.getValue().toString());
                 }
 
                 @Override
@@ -82,9 +84,17 @@ public class MainActivity extends AppCompatActivity {
             };
 
             BluetoothGatt gatt = device.connectGatt(MainActivity.this, true, bgc, TRANSPORT_LE);
-            BluetoothGattService service = gatt.getService(TX_UUID);
+            //BluetoothGattService service = gatt.getService(TX_UUID);
+            int properties = BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE;
+            int permissions = BluetoothGattCharacteristic.PERMISSION_WRITE;
+            BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(NUS_UUID, properties, permissions );
             byte[] test = new byte[] {(byte)0xaa, (byte)0x12, (byte)0x23};
-            //scanText.setText(service.toString());
+            characteristic.setValue(test);
+            characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+            boolean res;
+            res = gatt.writeCharacteristic(characteristic);
+            scanText.setText(Boolean.toString(res));
+
         }
 
         @Override
@@ -105,7 +115,6 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 4);
         } else {
             // if(areLocationServicesEnabled(this))
-            debugText.setTextColor(255);
             debugText.setText("Permission not there");
         }
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
